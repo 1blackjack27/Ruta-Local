@@ -1,0 +1,22 @@
+{
+  "name": "ruta-local",
+  "version": "1.0.0",
+  "description": "Descubre los negocios de cada municipio de Colombia",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "export": "next export"
+  },
+  "dependencies": {
+    "firebase": "^12.17.0",
+    "firebase-admin": "^14.2.0",
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
