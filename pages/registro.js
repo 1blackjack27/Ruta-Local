@@ -704,9 +704,10 @@ export default function Registro() {
                     <div key={i} style={{
                       position: 'relative', width: 100, height: 80, borderRadius: 'var(--radius-xs)',
                       overflow: 'hidden', border: '1px solid var(--border)',
-                    }}>
-                      <img src={url} alt={`Foto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        onError={e => { e.target.style.display = 'none'; e.target.parentElement.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:0.7rem">Error</div>' }} />
+                      background: 'var(--muted)', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center',
+                    }} className="foto-thumb">
+                      <img src={url} alt={`Foto ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       <button type="button" onClick={() => handleRemoveFoto(i)}
                         style={{
                           position: 'absolute', top: 4, right: 4, width: 22, height: 22,

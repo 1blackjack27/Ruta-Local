@@ -21,18 +21,18 @@ export default function Footer() {
           </div>
           <div>
             <h4 style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>Explorar</h4>
-            <Link href="/" className="footer-link">Inicio</Link>
-            <Link href="/planes" className="footer-link">Planes</Link>
+            <Link href="/" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 10, color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>Inicio</Link>
+            <Link href="/planes" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 10, color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>Planes</Link>
           </div>
           <div>
             <h4 style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>Para negocios</h4>
-            <Link href="/registro" className="footer-link">Registrar negocio</Link>
-            <Link href="/dashboard" className="footer-link">Panel de control</Link>
+            <Link href="/registro" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 10, color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>Registrar negocio</Link>
+            <Link href="/dashboard" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 10, color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>Panel de control</Link>
           </div>
           <div>
             <h4 style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>Legal</h4>
-            <a href="#" className="footer-link">Términos</a>
-            <a href="#" className="footer-link">Privacidad</a>
+            <a href="#" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 10, color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>Términos</a>
+            <a href="#" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 10, color: 'rgba(255,255,255,0.85)', textDecoration: 'none' }}>Privacidad</a>
           </div>
         </div>
         <div style={{
@@ -43,8 +43,6 @@ export default function Footer() {
         </div>
       </div>
       <style jsx>{`
-        .footer-link { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.85rem; margin-bottom: 8px; display: block; }
-        .footer-link:hover { color: #ffffff; }
         @media (max-width: 768px) {
           .f-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
         }

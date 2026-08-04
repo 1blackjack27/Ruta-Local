@@ -9,6 +9,15 @@ import { SITE_NAME, PAIS, DIAS_PRUEBA } from '../lib/constants'
 
 const departments = Object.keys(departamentos).sort()
 
+const countByCategoria = (negocios) => {
+  const info = {}
+  for (const n of negocios) {
+    if (getPlanInfo(n).debeBorrar) continue
+    info[n.categoria] = (info[n.categoria] || 0) + 1
+  }
+  return info
+}
+
 const testimonios = [
   {
     id: 1,
@@ -70,6 +79,8 @@ export default function Home() {
     const info = getPlanInfo(n)
     return !info.debeBorrar && (n.plan === 'premium' || n.plan === 'plus' || info.enPrueba)
   }).slice(0, 3)
+
+  const catCounts = countByCategoria(negocios)
 
   const handleSearch = () => {
     if (!dept || !mun) return
@@ -215,28 +226,30 @@ export default function Home() {
             display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20,
           }} className="cats-grid">
             {categorias.map(cat => (
-              <div key={cat.id} style={{
-                background: 'var(--surface)', borderRadius: 'var(--radius)',
-                padding: '28px 20px', textAlign: 'center', cursor: 'pointer',
-                transition: 'all 0.3s', border: '1px solid var(--border)',
-              }} className="cat-card"
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.style.borderColor = 'transparent' }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--border)' }}
-              >
+              <Link key={cat.id} href={`/categoria/${cat.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div style={{
-                  width: 56, height: 56, borderRadius: 16, display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                  background: cat.gradiente, margin: '0 auto 14px', fontSize: '1.4rem', color: '#fff',
-                }}>
-                  <i className={cat.icono}></i>
+                  background: 'var(--surface)', borderRadius: 'var(--radius)',
+                  padding: '28px 20px', textAlign: 'center', cursor: 'pointer',
+                  transition: 'all 0.3s', border: '1px solid var(--border)', height: '100%',
+                }} className="cat-card"
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.style.borderColor = 'transparent' }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--border)' }}
+                >
+                  <div style={{
+                    width: 56, height: 56, borderRadius: 16, display: 'flex',
+                    alignItems: 'center', justifyContent: 'center',
+                    background: cat.gradiente, margin: '0 auto 14px', fontSize: '1.4rem', color: '#fff',
+                  }} className="cat-icon">
+                    <i className={cat.icono}></i>
+                  </div>
+                  <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem', marginBottom: 4 }}>
+                    {cat.nombre}
+                  </h3>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                    {catCounts[cat.id] > 0 ? `${catCounts[cat.id]} disponible${catCounts[cat.id] === 1 ? '' : 's'}` : 'Disponible'}
+                  </span>
                 </div>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem', marginBottom: 4 }}>
-                  {cat.nombre}
-                </h3>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  {featured.length > 0 ? `${featured.length} disponibles` : 'Disponible'}
-                </span>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
