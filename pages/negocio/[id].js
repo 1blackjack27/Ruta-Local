@@ -1,9 +1,10 @@
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { getNegocioById, getNegocios, incrementContador } from '../../lib/storage'
+import { getNegocioById, getNegocios, incrementContador, getResenas, agregarResena } from '../../lib/storage'
 import { getPlanInfo } from '../../lib/planes'
 import { DIAS_PRUEBA } from '../../lib/constants'
+import { auth } from '../../lib/firebase'
 
 export default function NegocioPage() {
   const router = useRouter()
@@ -17,6 +18,13 @@ export default function NegocioPage() {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(-1)
   const [diasRestantes, setDiasRestantes] = useState(30)
   const [compartido, setCompartido] = useState(false)
+  const [resenas, setResenas] = useState([])
+  const [user, setUser] = useState(null)
+  const [authReady, setAuthReady] = useState(false)
+  const [meRating, setMeRating] = useState(0)
+  const [meComentario, setMeComentario] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [mensajeResena, setMensajeResena] = useState('')
 
   const handleCompartir = async () => {
     const url = window.location.href
@@ -70,9 +78,24 @@ export default function NegocioPage() {
       incrementContador(id, 'views')
 
       setLoading(false)
+
+      const r = await getResenas(id)
+      setResenas(r)
     }
     cargar()
   }, [id])
+
+  useEffect(() => {
+    if (!auth) {
+      setAuthReady(true)
+      return
+    }
+    const unsub = auth.onAuthStateChanged(u => {
+      setUser(u)
+      setAuthReady(true)
+    })
+    return () => unsub()
+  }, [])
 
   if (loading) {
     return (
@@ -178,20 +201,9 @@ export default function NegocioPage() {
 
   const horariosDias = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
 
-  const reviews = [
-    {
-      nombre: 'María García',
-      rating: 5,
-      comentario: 'Excelente servicio, muy recomendado. La atención fue increíble y los precios muy accesibles.'
-    },
-    {
-      nombre: 'Carlos López',
-      rating: 4,
-      comentario: 'Buen lugar, volvería sin dudas. La calidad del producto es consistente.'
-    }
-  ]
-
-  const rating = 4.8
+  const rating = resenas.length
+    ? resenas.reduce((a, r) => a + Number(r.rating || 0), 0) / resenas.length
+    : 0
   const fullStars = Math.floor(rating)
   const hasHalf = rating % 1 >= 0.5
 
@@ -206,6 +218,48 @@ export default function NegocioPage() {
   }
 
   const isPremium = plan.esPremium || plan.esPlus
+
+  const handleEnviarResena = async (e) => {
+    e.preventDefault()
+    setMensajeResena('')
+    if (!user) {
+      setMensajeResena('Debes iniciar sesión para dejar un comentario.')
+      return
+    }
+    if (meRating === 0) {
+      setMensajeResena('Selecciona una calificación de 1 a 5 estrellas.')
+      return
+    }
+    if (!meComentario.trim()) {
+      setMensajeResena('Escribe tu comentario.')
+      return
+    }
+    const nombre = (user.displayName || user.email || '').split('@')[0]
+    setEnviando(true)
+    const nuevo = await agregarResena(id, {
+      usuarioId: user.uid,
+      nombre,
+      rating: meRating,
+      comentario: meComentario.trim(),
+    })
+    setEnviando(false)
+    if (nuevo) {
+      const r2 = await getResenas(id)
+      setResenas(r2)
+      setMeRating(0)
+      setMeComentario('')
+      setMensajeResena('¡Gracias por tu comentario!')
+    } else {
+      setMensajeResena('No se pudo guardar tu comentario. Intenta de nuevo.')
+    }
+  }
+
+  const inputStyle = {
+    width: '100%', padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-sm)',
+    border: '1.5px solid var(--border)', fontSize: '0.85rem',
+    background: 'var(--surface)', color: 'var(--text)',
+    outline: 'none', fontFamily: 'var(--font-body)', boxSizing: 'border-box',
+  }
 
   return (
     <div style={{
@@ -315,7 +369,7 @@ export default function NegocioPage() {
           </span>
           <span style={{ fontWeight: 700, color: 'var(--text)' }}>{rating}</span>
           <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            ({Math.floor(Math.random() * 50) + 10} reseñas)
+            {resenas.length} {resenas.length === 1 ? 'reseña' : 'reseñas'}
           </span>
         </div>
       </div>
@@ -550,44 +604,140 @@ export default function NegocioPage() {
               Reseñas de clientes
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {reviews.map((review, i) => (
-                <div key={i} style={{
-                  display: 'flex', gap: '0.75rem', padding: '1rem',
-                  background: 'var(--surface)', borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--border)'
+              {resenas.length === 0 ? (
+                <p style={{
+                  color: 'var(--text-muted)', fontSize: '0.85rem',
+                  textAlign: 'center', padding: '1rem 0', margin: 0
                 }}>
-                  <div style={{
-                    width: '40px', height: '40px', borderRadius: '50%',
-                    background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontWeight: 700, fontSize: '0.9rem',
-                    flexShrink: 0
-                  }}>
-                    {review.nombre.charAt(0)}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      display: 'flex', justifyContent: 'space-between',
-                      alignItems: 'center', marginBottom: '0.25rem'
+                  Aún no hay comentarios. ¡Sé el primero en dejar uno!
+                </p>
+              ) : (
+                resenas.map((review, i) => {
+                  const nombre = review.nombre || 'Usuario'
+                  return (
+                    <div key={i} style={{
+                      display: 'flex', gap: '0.75rem', padding: '1rem',
+                      background: 'var(--surface)', borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border)'
                     }}>
-                      <span style={{
-                        fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)'
+                      <div style={{
+                        width: '40px', height: '40px', borderRadius: '50%',
+                        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#fff', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0, textTransform: 'uppercase'
                       }}>
-                        {review.nombre}
-                      </span>
-                      <span style={{ color: '#f59e0b', fontSize: '0.85rem' }}>
-                        {renderStars(review.rating)}
-                      </span>
+                        {nombre.charAt(0)}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{
+                          display: 'flex', justifyContent: 'space-between',
+                          alignItems: 'center', marginBottom: '0.25rem'
+                        }}>
+                          <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)' }}>
+                            {nombre}
+                          </span>
+                          <span style={{ color: '#f59e0b', fontSize: '0.85rem' }}>
+                            {renderStars(review.rating)}
+                          </span>
+                        </div>
+                        <p style={{
+                          color: 'var(--text-secondary)', fontSize: '0.85rem',
+                          lineHeight: 1.5, margin: 0
+                        }}>
+                          {review.comentario}
+                        </p>
+                      </div>
                     </div>
-                    <p style={{
-                      color: 'var(--text-secondary)', fontSize: '0.85rem',
-                      lineHeight: 1.5, margin: 0
-                    }}>
-                      {review.comentario}
-                    </p>
+                  )
+                })
+              )}
+            </div>
+
+            {/* Deja tu comentario */}
+            <div style={{
+              marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem'
+            }}>
+              <h3 style={{
+                fontFamily: 'var(--font-display)', fontSize: '1rem',
+                fontWeight: 700, margin: '0 0 0.75rem', color: 'var(--text)'
+              }}>
+                Deja tu comentario
+              </h3>
+
+              {!authReady ? (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Cargando...</p>
+              ) : !user ? (
+                <div style={{
+                  background: 'var(--muted)', borderRadius: 'var(--radius-sm)',
+                  padding: '1.25rem', textAlign: 'center'
+                }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', margin: '0 0 0.75rem' }}>
+                    Para dejar un comentario necesitas iniciar sesión o crear una cuenta.
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <Link href="/login">
+                      <span style={{
+                        display: 'inline-block', padding: '0.55rem 1.25rem',
+                        background: 'var(--primary)', color: '#fff',
+                        borderRadius: 'var(--radius-sm)', fontWeight: 600, fontSize: '0.85rem'
+                      }}>
+                        Iniciar sesión
+                      </span>
+                    </Link>
+                    <Link href="/registro">
+                      <span style={{
+                        display: 'inline-block', padding: '0.55rem 1.25rem',
+                        background: 'var(--surface)', color: 'var(--primary)',
+                        borderRadius: 'var(--radius-sm)', fontWeight: 600, fontSize: '0.85rem',
+                        border: '1.5px solid var(--primary)'
+                      }}>
+                        Crear cuenta gratis
+                      </span>
+                    </Link>
                   </div>
                 </div>
-              ))}
+              ) : (
+                <form onSubmit={handleEnviarResena} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button key={n} type="button" onClick={() => setMeRating(n)}
+                        style={{
+                          background: 'none', border: 'none', fontSize: '1.5rem',
+                          color: n <= meRating ? '#f59e0b' : 'var(--border)', cursor: 'pointer', padding: 0
+                        }}>
+                        ★
+                      </button>
+                    ))}
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginLeft: '0.25rem' }}>
+                      {meRating ? `${meRating}/5` : 'Califica'}
+                    </span>
+                  </div>
+                  <textarea
+                    value={meComentario}
+                    onChange={e => setMeComentario(e.target.value)}
+                    placeholder="Cuéntanos tu experiencia..."
+                    rows="3"
+                    style={{ ...inputStyle, resize: 'vertical', maxWidth: '100%' }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <button type="submit" disabled={enviando} style={{
+                      padding: '0.6rem 1.5rem', background: 'var(--primary)', color: '#fff',
+                      borderRadius: 'var(--radius-sm)', fontWeight: 600, fontSize: '0.85rem',
+                      border: 'none', cursor: 'pointer', transition: 'opacity 0.2s', opacity: enviando ? 0.7 : 1
+                    }}>
+                      {enviando ? 'Enviando...' : 'Publicar comentario'}
+                    </button>
+                  </div>
+                  {mensajeResena && (
+                    <p style={{
+                      fontSize: '0.85rem', margin: 0,
+                      color: mensajeResena === '¡Gracias por tu comentario!' ? 'var(--success)' : 'var(--error)'
+                    }}>
+                      {mensajeResena}
+                    </p>
+                  )}
+                </form>
+              )}
             </div>
           </div>
         </div>

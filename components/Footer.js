@@ -10,7 +10,7 @@ export default function Footer() {
       <div className="container">
         <div style={{
           display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 32,
-        }} className="footer-grid">
+        }} className="f-grid">
           <div>
             <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.3rem', color: '#fff', marginBottom: 8 }}>
               <i className="fas fa-map-marked-alt"></i> {SITE_NAME}
@@ -21,18 +21,18 @@ export default function Footer() {
           </div>
           <div>
             <h4 style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>Explorar</h4>
-            <Link href="/" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 8 }}>Inicio</Link>
-            <Link href="/planes" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 8 }}>Planes</Link>
+            <Link href="/" className="footer-link">Inicio</Link>
+            <Link href="/planes" className="footer-link">Planes</Link>
           </div>
           <div>
             <h4 style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>Para negocios</h4>
-            <Link href="/registro" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 8 }}>Registrar negocio</Link>
-            <Link href="/dashboard" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 8 }}>Panel de control</Link>
+            <Link href="/registro" className="footer-link">Registrar negocio</Link>
+            <Link href="/dashboard" className="footer-link">Panel de control</Link>
           </div>
           <div>
             <h4 style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>Legal</h4>
-            <a href="#" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 8 }}>Términos</a>
-            <a href="#" style={{ display: 'block', fontSize: '0.85rem', marginBottom: 8 }}>Privacidad</a>
+            <a href="#" className="footer-link">Términos</a>
+            <a href="#" className="footer-link">Privacidad</a>
           </div>
         </div>
         <div style={{
@@ -42,6 +42,13 @@ export default function Footer() {
           © {new Date().getFullYear()} {SITE_NAME}. Hecho en Colombia con ♥ para los municipios del país.
         </div>
       </div>
+      <style jsx>{`
+        .footer-link { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.85rem; margin-bottom: 8px; display: block; }
+        .footer-link:hover { color: #ffffff; }
+        @media (max-width: 768px) {
+          .f-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+        }
+      `}</style>
     </footer>
   )
 }
