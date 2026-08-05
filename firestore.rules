@@ -1,0 +1,28 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Municipios: lectura pública, cualquier autenticado puede crear
+    match /municipios/{docId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+
+    // Negocios: lectura pública
+    match /negocios/{negocioId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null
+        && (request.auth.uid == resource.data.ownerId
+            || request.auth.token.email == resource.data.ownerEmail);
+
+      // Reseñas: lectura pública, cualquier autenticado puede crear
+      match /resenas/{resenaId} {
+        allow read: if true;
+        allow create: if request.auth != null;
+        allow update, delete: if request.auth != null
+          && request.auth.uid == resource.data.usuarioId;
+      }
+    }
+  }
+}

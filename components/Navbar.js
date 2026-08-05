@@ -19,8 +19,11 @@ export default function Navbar() {
   const handleLogout = async () => {
     if (!auth) return
     await signOut(auth)
+    setOpen(false)
     router.push('/')
   }
+
+  const cerrar = () => setOpen(false)
 
   return (
     <nav style={{
@@ -42,24 +45,24 @@ export default function Navbar() {
         <button onClick={() => setOpen(!open)} style={{
           display: 'none', background: 'none', border: 'none', fontSize: '1.5rem', color: 'var(--text)', cursor: 'pointer',
         }} className="nav-toggle">
-          <i className="fas fa-bars"></i>
+          <i className={`fas ${open ? 'fa-times' : 'fa-bars'}`}></i>
         </button>
 
         <div style={{
           display: 'flex', alignItems: 'center', gap: 24,
         }} className="nav-links">
-          <Link href="/" style={{ fontSize: '0.88rem', fontWeight: 500, color: router.pathname === '/' ? 'var(--primary)' : 'var(--text-secondary)' }}>
+          <Link href="/" onClick={cerrar} style={{ fontSize: '0.88rem', fontWeight: 500, color: router.pathname === '/' ? 'var(--primary)' : 'var(--text-secondary)' }}>
             Inicio
           </Link>
-          <Link href="/registro" style={{ fontSize: '0.88rem', fontWeight: 500, color: router.pathname === '/registro' ? 'var(--primary)' : 'var(--text-secondary)' }}>
+          <Link href="/registro" onClick={cerrar} style={{ fontSize: '0.88rem', fontWeight: 500, color: router.pathname === '/registro' ? 'var(--primary)' : 'var(--text-secondary)' }}>
             Registrar negocio
           </Link>
-          <Link href="/planes" style={{ fontSize: '0.88rem', fontWeight: 500, color: router.pathname === '/planes' ? 'var(--primary)' : 'var(--text-secondary)' }}>
+          <Link href="/planes" onClick={cerrar} style={{ fontSize: '0.88rem', fontWeight: 500, color: router.pathname === '/planes' ? 'var(--primary)' : 'var(--text-secondary)' }}>
             Planes
           </Link>
           {user ? (
             <>
-              <Link href="/dashboard" style={{ fontSize: '0.88rem', fontWeight: 500, color: router.pathname === '/dashboard' ? 'var(--primary)' : 'var(--text-secondary)' }}>
+              <Link href="/dashboard" onClick={cerrar} style={{ fontSize: '0.88rem', fontWeight: 500, color: router.pathname === '/dashboard' ? 'var(--primary)' : 'var(--text-secondary)' }}>
                 <i className="fas fa-user" style={{ marginRight: 5 }}></i> Mi panel
               </Link>
               <button onClick={handleLogout} style={{
@@ -70,12 +73,20 @@ export default function Navbar() {
               </button>
             </>
           ) : (
-            <Link href="/login" style={{
-              background: 'var(--primary)', color: '#fff', padding: '8px 20px',
-              borderRadius: 50, fontWeight: 600, fontSize: '0.85rem',
-            }}>
-              <i className="fas fa-user"></i> Iniciar sesión
-            </Link>
+            <>
+              <Link href="/registro-persona" onClick={cerrar} style={{
+                background: 'none', border: '1.5px solid var(--primary)', color: 'var(--primary)',
+                padding: '8px 20px', borderRadius: 50, fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap',
+              }}>
+                <i className="fas fa-user-plus"></i> Crear cuenta
+              </Link>
+              <Link href="/login" onClick={cerrar} style={{
+                background: 'var(--primary)', color: '#fff', padding: '8px 20px',
+                borderRadius: 50, fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap',
+              }}>
+                <i className="fas fa-user"></i> Iniciar sesión
+              </Link>
+            </>
           )}
         </div>
       </div>
