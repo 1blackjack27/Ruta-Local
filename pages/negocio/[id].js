@@ -684,7 +684,7 @@ export default function NegocioPage() {
                         Iniciar sesión
                       </span>
                     </Link>
-                    <Link href="/registro">
+                    <Link href={`/registro-persona?next=${encodeURIComponent(`/negocio/${id}`)}`}>
                       <span style={{
                         display: 'inline-block', padding: '0.55rem 1.25rem',
                         background: 'var(--surface)', color: 'var(--primary)',

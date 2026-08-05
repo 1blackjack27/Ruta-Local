@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { auth } from '../lib/firebase'
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { SITE_NAME } from '../lib/constants'
 
 const sCard = {
   background: 'var(--surface)', borderRadius: 'var(--radius)',
@@ -22,44 +23,52 @@ const sLabel = {
   marginBottom: 6, letterSpacing: '0.01em',
 }
 
-export default function Login() {
+export default function RegistroPersona() {
   const router = useRouter()
+  const [nombre, setNombre] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
-  const [msg, setMsg] = useState('')
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (auth) {
-      const unsub = auth.onAuthStateChanged(user => {
-        if (user) router.push('/dashboard')
-      })
-      return () => unsub()
-    }
-  }, [router])
-
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    setMsg('')
+    if (!nombre.trim()) {
+      setError('Escribe tu nombre.')
+      return
+    }
+    if (!email.trim()) {
+      setError('Ingresa tu correo electrónico.')
+      return
+    }
+    if (password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres.')
+      return
+    }
+    if (confirmPassword !== password) {
+      setError('Las contraseñas no coinciden.')
+      return
+    }
     if (!auth) {
       setError('Servicio de autenticación no disponible. Intenta más tarde.')
       return
     }
     setLoading(true)
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password)
-      const next = router.query.next || '/dashboard'
+      const cred = await createUserWithEmailAndPassword(auth, email.trim(), password)
+      await updateProfile(cred.user, { displayName: nombre.trim() })
+      const next = router.query.next || '/'
       router.push(next)
     } catch (err) {
       const code = err.code || ''
-      if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
-        setError('Correo o contraseña incorrectos.')
+      if (code === 'auth/email-already-in-use') {
+        setError('Ese correo ya tiene una cuenta. Inicia sesión con tu contraseña.')
       } else if (code === 'auth/invalid-email') {
         setError('Ingresa un correo válido.')
-      } else if (code === 'auth/too-many-requests') {
-        setError('Demasiados intentos. Espera un momento y vuelve a intentar.')
+      } else if (code === 'auth/weak-password') {
+        setError('La contraseña debe tener al menos 6 caracteres.')
       } else {
         setError(err.message)
       }
@@ -67,42 +76,29 @@ export default function Login() {
     }
   }
 
-  const handleReset = async () => {
-    setError('')
-    setMsg('')
-    if (!auth) return
-    if (!email.trim()) {
-      setError('Escribe tu correo para enviarte el enlace de recuperación.')
-      return
-    }
-    try {
-      await sendPasswordResetEmail(auth, email.trim())
-      setMsg('Te enviamos un enlace para restablecer tu contraseña. Revisa tu correo.')
-    } catch (err) {
-      if (err.code === 'auth/user-not-found') {
-        setMsg('Si el correo existe, te enviamos el enlace de recuperación.')
-      } else {
-        setError(err.message)
-      }
-    }
-  }
-
-  const containerStyle = {
-    maxWidth: 480, margin: '0 auto', padding: '48px 20px 80px',
-  }
-
   return (
-    <div style={containerStyle}>
+    <div style={{ maxWidth: 480, margin: '0 auto', padding: '48px 20px 80px', fontFamily: 'var(--font-body)' }}>
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.7rem', fontWeight: 800, marginBottom: 8 }}>
-          Inicia sesión
+          Crea tu cuenta
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          Accede a tu panel para gestionar tus negocios
+          Regístrate como persona para dejar comentarios en los negocios de {SITE_NAME}
         </p>
       </div>
 
-      <form onSubmit={handleLogin} style={sCard} noValidate>
+      <form onSubmit={handleSubmit} style={sCard} noValidate>
+        <div style={{ marginBottom: 16 }}>
+          <label style={sLabel}>Tu nombre</label>
+          <input
+            type="text"
+            value={nombre}
+            onChange={e => setNombre(e.target.value)}
+            placeholder="Ej: Ana Rodríguez"
+            style={sField}
+            required
+          />
+        </div>
         <div style={{ marginBottom: 16 }}>
           <label style={sLabel}>Correo electrónico</label>
           <input
@@ -114,13 +110,24 @@ export default function Login() {
             required
           />
         </div>
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ marginBottom: 16 }}>
           <label style={sLabel}>Contraseña</label>
           <input
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            placeholder="Tu contraseña"
+            placeholder="Mínimo 6 caracteres"
+            style={sField}
+            required
+          />
+        </div>
+        <div style={{ marginBottom: 20 }}>
+          <label style={sLabel}>Confirmar contraseña</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={e => setConfirmPassword(e.target.value)}
+            placeholder="Repite tu contraseña"
             style={sField}
             required
           />
@@ -132,12 +139,6 @@ export default function Login() {
             borderRadius: 'var(--radius-sm)', fontSize: '0.82rem', marginBottom: 16,
           }}>{error}</div>
         )}
-        {msg && (
-          <div style={{
-            background: '#DCFCE7', color: '#166534', padding: '10px 14px',
-            borderRadius: 'var(--radius-sm)', fontSize: '0.82rem', marginBottom: 16,
-          }}>{msg}</div>
-        )}
 
         <button
           type="submit"
@@ -148,25 +149,20 @@ export default function Login() {
             border: 'none', cursor: 'pointer', transition: 'opacity 0.2s',
           }}
         >
-          {loading ? 'Ingresando...' : 'Ingresar'}
-        </button>
-
-        <button
-          type="button"
-          onClick={handleReset}
-          style={{
-            width: '100%', marginTop: 12, background: 'none', border: 'none',
-            color: 'var(--primary)', fontSize: '0.83rem', fontWeight: 600, cursor: 'pointer',
-          }}
-        >
-          ¿Olvidaste tu contraseña?
+          {loading ? 'Creando cuenta...' : 'Crear cuenta'}
         </button>
       </form>
 
       <p style={{ textAlign: 'center', marginTop: 20, fontSize: '0.88rem', color: 'var(--text-secondary)' }}>
-        ¿Aún no tienes cuenta?{' '}
-        <Link href="/registro" style={{ color: 'var(--primary)', fontWeight: 700 }}>
-          Regístrate gratis
+        ¿Ya tienes cuenta?{' '}
+        <Link href="/login" style={{ color: 'var(--primary)', fontWeight: 700 }}>
+          Inicia sesión
+        </Link>
+      </p>
+      <p style={{ textAlign: 'center', marginTop: 8, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+        ¿Tienes un negocio?{' '}
+        <Link href="/registro" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+          Regístralo aquí
         </Link>
       </p>
     </div>
