@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { getNegocioById, getNegocios, incrementContador, getResenas, agregarResena } from '../../lib/storage'
+import { getNegocioById, getNegocios, incrementContador, getResenas, agregarResena, getPerfil, getFavoritos, toggleFavorito } from '../../lib/storage'
 import { getPlanInfo } from '../../lib/planes'
 import { DIAS_PRUEBA } from '../../lib/constants'
 import { auth } from '../../lib/firebase'
@@ -25,6 +25,8 @@ export default function NegocioPage() {
   const [meComentario, setMeComentario] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [mensajeResena, setMensajeResena] = useState('')
+  const [esFavorito, setEsFavorito] = useState(false)
+  const [favoritosCargando, setFavoritosCargando] = useState(false)
 
   const handleCompartir = async () => {
     const url = window.location.href
@@ -90,12 +92,29 @@ export default function NegocioPage() {
       setAuthReady(true)
       return
     }
-    const unsub = auth.onAuthStateChanged(u => {
+    const unsub = auth.onAuthStateChanged(async u => {
       setUser(u)
       setAuthReady(true)
+      if (u && id) {
+        const favs = await getFavoritos(u.uid)
+        setEsFavorito(favs.some(f => f.negocioId === id))
+      }
     })
     return () => unsub()
-  }, [])
+  }, [id])
+
+  const handleFavorito = async () => {
+    if (!user) {
+      router.push(`/login?next=/negocio/${id}`)
+      return
+    }
+    setFavoritosCargando(true)
+    const activo = await toggleFavorito(user.uid, negocio)
+    if (activo !== null) {
+      setEsFavorito(activo)
+    }
+    setFavoritosCargando(false)
+  }
 
   if (loading) {
     return (
@@ -236,9 +255,13 @@ export default function NegocioPage() {
     }
     const nombre = (user.displayName || user.email || '').split('@')[0]
     setEnviando(true)
+    let fotoAutor = user.photoURL || ''
+    const perfil = await getPerfil(user.uid)
+    if (perfil?.foto) fotoAutor = perfil.foto
     const nuevo = await agregarResena(id, {
       usuarioId: user.uid,
       nombre,
+      fotoAutor,
       rating: meRating,
       comentario: meComentario.trim(),
     })
@@ -330,14 +353,25 @@ export default function NegocioPage() {
             ← Volver a {negocio.municipio || 'inicio'}
           </span>
         </Link>
-        <button onClick={handleCompartir} style={{
-          background: 'none', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-sm)', padding: '0.4rem 0.75rem',
-          color: compartido ? 'var(--success)' : 'var(--text-secondary)', cursor: 'pointer',
-          fontSize: '0.85rem', fontWeight: 500
-        }}>
-          {compartido ? '¡Enlace copiado!' : 'Compartir'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button onClick={handleFavorito} disabled={!authReady || favoritosCargando}
+            style={{
+              background: 'none', border: `1px solid ${esFavorito ? 'var(--primary)' : 'var(--border)'}`,
+              borderRadius: 'var(--radius-sm)', padding: '0.4rem 0.75rem',
+              color: esFavorito ? 'var(--primary)' : 'var(--text-secondary)', cursor: 'pointer',
+              fontSize: '0.85rem', fontWeight: 500
+            }}>
+            {esFavorito ? '♥ Guardado' : '♡ Guardar'}
+          </button>
+          <button onClick={handleCompartir} style={{
+            background: 'none', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-sm)', padding: '0.4rem 0.75rem',
+            color: compartido ? 'var(--success)' : 'var(--text-secondary)', cursor: 'pointer',
+            fontSize: '0.85rem', fontWeight: 500
+          }}>
+            {compartido ? '¡Enlace copiado!' : 'Compartir'}
+          </button>
+        </div>
       </div>
 
       {/* Business Header */}
@@ -614,19 +648,18 @@ export default function NegocioPage() {
               ) : (
                 resenas.map((review, i) => {
                   const nombre = review.nombre || 'Usuario'
-                  return (
-                    <div key={i} style={{
-                      display: 'flex', gap: '0.75rem', padding: '1rem',
-                      background: 'var(--surface)', borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border)'
-                    }}>
+                  const perfilUrl = review.usuarioId ? `/perfil/${review.usuarioId}` : null
+                  const inner = (
+                    <>
                       <div style={{
                         width: '40px', height: '40px', borderRadius: '50%',
-                        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                        background: review.fotoAutor
+                          ? `url(${review.fotoAutor}) center/cover`
+                          : 'linear-gradient(135deg, var(--primary), var(--secondary))',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: '#fff', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0, textTransform: 'uppercase'
                       }}>
-                        {nombre.charAt(0)}
+                        {!review.fotoAutor && nombre.charAt(0)}
                       </div>
                       <div style={{ flex: 1 }}>
                         <div style={{
@@ -647,6 +680,25 @@ export default function NegocioPage() {
                           {review.comentario}
                         </p>
                       </div>
+                    </>
+                  )
+                  return perfilUrl ? (
+                    <Link key={i} href={perfilUrl} style={{
+                      display: 'flex', gap: '0.75rem', padding: '1rem',
+                      background: 'var(--surface)', borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border)', textDecoration: 'none',
+                      transition: 'box-shadow 0.2s, transform 0.2s'
+                    }} onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                       onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}>
+                      {inner}
+                    </Link>
+                  ) : (
+                    <div key={i} style={{
+                      display: 'flex', gap: '0.75rem', padding: '1rem',
+                      background: 'var(--surface)', borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border)'
+                    }}>
+                      {inner}
                     </div>
                   )
                 })

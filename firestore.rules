@@ -8,21 +8,40 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Negocios: lectura pública
+    // Negocios: lectura pública, solo dueño modifica
     match /negocios/{negocioId} {
       allow read: if true;
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null
         && (request.auth.uid == resource.data.ownerId
             || request.auth.token.email == resource.data.ownerEmail);
+    }
 
-      // Reseñas: lectura pública, cualquier autenticado puede crear
-      match /resenas/{resenaId} {
-        allow read: if true;
-        allow create: if request.auth != null;
-        allow update, delete: if request.auth != null
-          && request.auth.uid == resource.data.usuarioId;
-      }
+    // Reseñas globales: lectura pública, crear autenticado, editar/borrar solo autor
+    match /resenas/{resenaId} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null
+        && request.auth.uid == resource.data.usuarioId;
+    }
+
+    // Perfiles de persona: cada quien puede crear y actualizar su propio perfil
+    match /perfiles/{usuarioId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.auth.uid == usuarioId;
+      allow update, delete: if request.auth != null
+        && request.auth.uid == usuarioId;
+    }
+
+    // Favoritos: cada usuario lee/crea/elimina los suyos
+    match /favoritos/{favoritoId} {
+      allow read: if true;
+      allow create: if request.auth != null
+        && request.resource.data.usuarioId == request.auth.uid;
+      allow delete: if request.auth != null
+        && resource.data.usuarioId == request.auth.uid;
+      allow update: if false;
     }
   }
 }

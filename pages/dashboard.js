@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { getNegocios, guardarNegocio, eliminarNegocio } from '../lib/storage'
+import { getNegocios, guardarNegocio, eliminarNegocio, getPerfil } from '../lib/storage'
 import { getPlanInfo, necesitaBorrado, puedeTenerMasNegocios } from '../lib/planes'
 import { SITE_NAME, CODIGO_PROMO, DIAS_PRUEBA, DIAS_GRACIA, formatMoney } from '../lib/constants'
 import { useRouter } from 'next/router'
 import { auth } from '../lib/firebase'
 import { signOut } from 'firebase/auth'
+import PanelPersona from '../components/PanelPersona'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -13,6 +14,8 @@ export default function Dashboard() {
   const [authReady, setAuthReady] = useState(false)
   const [negocios, setNegocios] = useState([])
   const [loading, setLoading] = useState(true)
+  const [tienePerfilPersona, setTienePerfilPersona] = useState(false)
+  const [vista, setVista] = useState('auto')
 
   useEffect(() => {
     if (!auth) {
@@ -36,6 +39,8 @@ export default function Dashboard() {
       const data = await getNegocios()
       const propios = (data || []).filter(n => n.ownerId === user.uid || n.ownerEmail === user.email)
       setNegocios(propios)
+      const perfil = await getPerfil(user.uid)
+      setTienePerfilPersona(!!perfil)
       setLoading(false)
     }
     cargar()
@@ -615,6 +620,61 @@ export default function Dashboard() {
     )
   }
 
+  const esPersona = tienePerfilPersona && negocios.length === 0
+  const esDueno = negocios.length > 0
+  const vistaMostrada = vista === 'auto'
+    ? (esDueno ? 'negocio' : esPersona ? 'persona' : 'negocio')
+    : vista
+
+  if (tienePerfilPersona && vistaMostrada === 'persona') {
+    return (
+      <>
+        <div style={containerStyle}>
+          <div style={headerStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <h1 style={greetingStyle}>¡Hola, bienvenido a tu panel!</h1>
+                <p style={{ ...subtitleStyle, marginBottom: 0 }}>
+                  Perfil de persona · Tus comentarios y lugares favoritos
+                </p>
+              </div>
+              <button onClick={handleLogout} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '8px 16px', background: 'transparent', color: 'var(--text-secondary)',
+                border: '1px solid var(--border)', borderRadius: 8, fontSize: 14,
+                fontWeight: 600, cursor: 'pointer',
+              }}>
+                <i className="fas fa-sign-out-alt"></i>
+                Cerrar sesión ({user.email})
+              </button>
+            </div>
+            <div style={{ ...headerActionsStyle, marginTop: 24 }}>
+              <Link href="/" style={btnSecondaryStyle}>
+                Explorar negocios
+              </Link>
+              {negocios.length > 0 && (
+                <button onClick={() => setVista('negocio')} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '10px 24px', background: 'transparent', color: 'var(--text-secondary)',
+                  border: '1px solid var(--border)', borderRadius: 8, fontSize: 14,
+                  fontWeight: 600, cursor: 'pointer',
+                }}>
+                  Panel de mis negocios
+                </button>
+              )}
+            </div>
+          </div>
+
+          <PanelPersona user={user} onVerPanelNegocio={() => setVista('negocio')} />
+
+          <div style={footerStyle}>
+            © 2026 {SITE_NAME} · Hecho en Colombia
+          </div>
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
       <div style={containerStyle}>
@@ -643,6 +703,16 @@ export default function Dashboard() {
           <Link href="/planes" style={btnSecondaryStyle}>
             Ver planes
           </Link>
+          {tienePerfilPersona && (
+            <button onClick={() => setVista('persona')} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '10px 24px', background: 'transparent', color: 'var(--text-secondary)',
+              border: '1px solid var(--border)', borderRadius: 8, fontSize: 14,
+              fontWeight: 600, cursor: 'pointer',
+            }}>
+              Mi perfil de persona
+            </button>
+          )}
         </div>
       </div>
 
