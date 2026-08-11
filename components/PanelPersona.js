@@ -3,10 +3,10 @@ import Link from 'next/link'
 import { getPerfil, getFavoritos, getResenasDeUsuario } from '../lib/storage'
 import { SITE_NAME } from '../lib/constants'
 
-export default function PanelPersona({ user, onVerPanelNegocio }) {
+export default function PanelPersona({ user, favoritos: favoritosProp, resenas: resenasProp, onVerPanelNegocio }) {
   const [perfil, setPerfil] = useState(null)
-  const [favoritos, setFavoritos] = useState([])
-  const [resenas, setResenas] = useState([])
+  const [favoritos, setFavoritos] = useState(favoritosProp || [])
+  const [resenas, setResenas] = useState(resenasProp || [])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -15,13 +15,13 @@ export default function PanelPersona({ user, onVerPanelNegocio }) {
     ;(async () => {
       const [p, f, r] = await Promise.all([
         getPerfil(user.uid),
-        getFavoritos(user.uid),
-        getResenasDeUsuario(user.uid),
+        favoritosProp ? null : getFavoritos(user.uid),
+        resenasProp ? null : getResenasDeUsuario(user.uid),
       ])
       if (!activo) return
       setPerfil(p)
-      setFavoritos(f)
-      setResenas(r)
+      if (f) setFavoritos(f)
+      if (r) setResenas(r)
       setLoading(false)
     })()
     return () => { activo = false }
@@ -36,6 +36,31 @@ export default function PanelPersona({ user, onVerPanelNegocio }) {
 
   return (
     <>
+      {!perfil && (
+        <div style={{
+          background: 'linear-gradient(135deg, var(--accent-bg), var(--secondary-bg))',
+          border: '2px dashed var(--accent)', borderRadius: 16, padding: '20px 24px',
+          marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+        }}>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <p style={{ fontSize: 15, fontWeight: 700, margin: '0 0 4px 0', color: 'var(--accent)' }}>
+              <i className="fas fa-user-plus" style={{ marginRight: 8 }}></i>
+              Completa tu perfil público
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
+              Agrega tu foto y tus redes (Instagram, TikTok, Facebook) para que la gente te conozca cuando comentes.
+            </p>
+          </div>
+          <Link href="/perfil/editar" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6,
+            padding: '10px 20px', backgroundColor: 'var(--accent)', color: '#fff',
+            border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600,
+            cursor: 'pointer', textDecoration: 'none',
+          }}>
+            Completar mi perfil
+          </Link>
+        </div>
+      )}
       {/* Tarjeta de perfil */}
       <div style={{
         background: 'var(--card-bg)', borderRadius: 12, padding: 24,

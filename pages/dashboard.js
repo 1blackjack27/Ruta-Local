@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { getNegocios, guardarNegocio, eliminarNegocio, getPerfil } from '../lib/storage'
+import { getNegocios, guardarNegocio, eliminarNegocio, getPerfil, getFavoritos, getResenasDeUsuario } from '../lib/storage'
 import { getPlanInfo, necesitaBorrado, puedeTenerMasNegocios } from '../lib/planes'
 import { SITE_NAME, CODIGO_PROMO, DIAS_PRUEBA, DIAS_GRACIA, formatMoney } from '../lib/constants'
 import { useRouter } from 'next/router'
@@ -15,6 +15,8 @@ export default function Dashboard() {
   const [negocios, setNegocios] = useState([])
   const [loading, setLoading] = useState(true)
   const [tienePerfilPersona, setTienePerfilPersona] = useState(false)
+  const [favoritos, setFavoritos] = useState([])
+  const [resenas, setResenas] = useState([])
   const [vista, setVista] = useState('auto')
 
   useEffect(() => {
@@ -39,8 +41,14 @@ export default function Dashboard() {
       const data = await getNegocios()
       const propios = (data || []).filter(n => n.ownerId === user.uid || n.ownerEmail === user.email)
       setNegocios(propios)
-      const perfil = await getPerfil(user.uid)
+      const [perfil, favs, res] = await Promise.all([
+        getPerfil(user.uid),
+        getFavoritos(user.uid),
+        getResenasDeUsuario(user.uid),
+      ])
       setTienePerfilPersona(!!perfil)
+      setFavoritos(favs)
+      setResenas(res)
       setLoading(false)
     }
     cargar()
@@ -620,13 +628,47 @@ export default function Dashboard() {
     )
   }
 
-  const esPersona = tienePerfilPersona && negocios.length === 0
+  const esPersona = tienePerfilPersona || favoritos.length > 0 || resenas.length > 0
   const esDueno = negocios.length > 0
   const vistaMostrada = vista === 'auto'
-    ? (esDueno ? 'negocio' : esPersona ? 'persona' : 'negocio')
+    ? (esPersona ? 'persona' : 'negocio')
     : vista
 
-  if (tienePerfilPersona && vistaMostrada === 'persona') {
+  const tabBarStyle = {
+    display: 'flex', gap: 8, margin: '0 0 24px', flexWrap: 'wrap',
+  }
+  const tabBase = {
+    padding: '9px 20px', borderRadius: 50, fontSize: 14, fontWeight: 600,
+    cursor: 'pointer', border: '1.5px solid var(--border)', background: 'var(--surface)',
+    color: 'var(--text-secondary)', fontFamily: 'var(--font-body)',
+  }
+  const tabActive = {
+    ...tabBase,
+    background: 'var(--primary)', borderColor: 'var(--primary)', color: '#fff',
+  }
+
+  const renderTabs = () => (
+    <div style={tabBarStyle}>
+      <button style={vistaMostrada === 'persona' ? tabActive : tabBase} onClick={() => setVista('persona')}>
+        <i className="fas fa-user" style={{ marginRight: 6 }}></i>
+        Mi perfil
+      </button>
+      {esDueno && (
+        <button style={vistaMostrada === 'negocio' ? tabActive : tabBase} onClick={() => setVista('negocio')}>
+          <i className="fas fa-store" style={{ marginRight: 6 }}></i>
+          Mis negocios {negocios.length > 0 ? `(${negocios.length})` : ''}
+        </button>
+      )}
+      {esPersona && !esDueno && (
+        <button style={vistaMostrada === 'negocio' ? tabActive : tabBase} onClick={() => setVista('negocio')}>
+          <i className="fas fa-store" style={{ marginRight: 6 }}></i>
+          Registrar negocio
+        </button>
+      )}
+    </div>
+  )
+
+  if (vistaMostrada === 'persona') {
     return (
       <>
         <div style={containerStyle}>
@@ -635,7 +677,7 @@ export default function Dashboard() {
               <div>
                 <h1 style={greetingStyle}>¡Hola, bienvenido a tu panel!</h1>
                 <p style={{ ...subtitleStyle, marginBottom: 0 }}>
-                  Perfil de persona · Tus comentarios y lugares favoritos
+                  Tu perfil de persona · Comentarios, lugares favoritos y más
                 </p>
               </div>
               <button onClick={handleLogout} style={{
@@ -648,24 +690,12 @@ export default function Dashboard() {
                 Cerrar sesión ({user.email})
               </button>
             </div>
-            <div style={{ ...headerActionsStyle, marginTop: 24 }}>
-              <Link href="/" style={btnSecondaryStyle}>
-                Explorar negocios
-              </Link>
-              {negocios.length > 0 && (
-                <button onClick={() => setVista('negocio')} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '10px 24px', background: 'transparent', color: 'var(--text-secondary)',
-                  border: '1px solid var(--border)', borderRadius: 8, fontSize: 14,
-                  fontWeight: 600, cursor: 'pointer',
-                }}>
-                  Panel de mis negocios
-                </button>
-              )}
-            </div>
           </div>
 
-          <PanelPersona user={user} onVerPanelNegocio={() => setVista('negocio')} />
+          {renderTabs()}
+
+          <PanelPersona user={user} favoritos={favoritos} resenas={resenas}
+            onVerPanelNegocio={() => setVista('negocio')} />
 
           <div style={footerStyle}>
             © 2026 {SITE_NAME} · Hecho en Colombia
@@ -696,23 +726,14 @@ export default function Dashboard() {
             Cerrar sesión ({user.email})
           </button>
         </div>
-        <div style={{ ...headerActionsStyle, marginTop: 24 }}>
+        {renderTabs()}
+        <div style={{ ...headerActionsStyle }}>
           <Link href="/registro" style={btnPrimaryStyle}>
             + Nuevo negocio
           </Link>
           <Link href="/planes" style={btnSecondaryStyle}>
             Ver planes
           </Link>
-          {tienePerfilPersona && (
-            <button onClick={() => setVista('persona')} style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '10px 24px', background: 'transparent', color: 'var(--text-secondary)',
-              border: '1px solid var(--border)', borderRadius: 8, fontSize: 14,
-              fontWeight: 600, cursor: 'pointer',
-            }}>
-              Mi perfil de persona
-            </button>
-          )}
         </div>
       </div>
 
