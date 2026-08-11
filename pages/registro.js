@@ -102,6 +102,12 @@ export default function Registro() {
 
   const [editId, setEditId] = useState('')
   const [cargandoEdicion, setCargandoEdicion] = useState(false)
+  const [originalCreatedAt, setOriginalCreatedAt] = useState('')
+  const [originalPlan, setOriginalPlan] = useState('')
+  const [originalViews, setOriginalViews] = useState(0)
+  const [originalWhatsappClicks, setOriginalWhatsappClicks] = useState(0)
+  const [originalCallClicks, setOriginalCallClicks] = useState(0)
+  const [originalFechaCreacion, setOriginalFechaCreacion] = useState('')
 
   useEffect(() => {
     if (!router.isReady) return
@@ -131,6 +137,12 @@ export default function Registro() {
       setServicios(Array.isArray(n.servicios) ? n.servicios : [])
       setNombreDueno(n.nombreDueno || '')
       setFotoDueno(n.fotoDueno || '')
+      setOriginalCreatedAt(n.createdAt || '')
+      setOriginalPlan(n.plan || '')
+      setOriginalViews(Number(n.views) || 0)
+      setOriginalWhatsappClicks(Number(n.whatsappClicks) || 0)
+      setOriginalCallClicks(Number(n.callClicks) || 0)
+      setOriginalFechaCreacion(n.fechaCreacion || '')
       if (n.horario && typeof n.horario === 'object') {
         setHorario({ ...DEFAULT_HOURS, ...n.horario })
       }
@@ -373,11 +385,12 @@ export default function Registro() {
       horario,
       nombreDueno: nombreDueno.trim(),
       fotoDueno: fotoDueno.trim(),
-      plan: 'free',
-      createdAt: new Date().toISOString(),
-      views: 0,
-      whatsappClicks: 0,
-      callClicks: 0,
+      plan: editId ? originalPlan : 'free',
+      createdAt: editId ? originalCreatedAt : new Date().toISOString(),
+      fechaCreacion: editId ? originalFechaCreacion : new Date().toISOString(),
+      views: editId ? originalViews : 0,
+      whatsappClicks: editId ? originalWhatsappClicks : 0,
+      callClicks: editId ? originalCallClicks : 0,
     }
 
     await guardarNegocio(negocio)
