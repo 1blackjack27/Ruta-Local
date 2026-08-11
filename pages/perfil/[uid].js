@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Head from 'next/head'
-import Navbar from '../../components/Navbar'
-import Footer from '../../components/Footer'
 import { getPerfil, getResenasDeUsuario, getFavoritos } from '../../lib/storage'
 import { SITE_NAME } from '../../lib/constants'
 
@@ -81,7 +79,6 @@ export default function PerfilPage() {
       <Head>
         <title>{`${nombre} · Perfil de ${SITE_NAME}`}</title>
       </Head>
-      <Navbar />
       <main style={{ minHeight: '70vh', position: 'relative', zIndex: 1 }}>
         <div style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 80px', fontFamily: 'var(--font-body)' }}>
           {loading ? (
@@ -245,7 +242,6 @@ export default function PerfilPage() {
           )}
         </div>
       </main>
-      <Footer />
     </>
   )
 }

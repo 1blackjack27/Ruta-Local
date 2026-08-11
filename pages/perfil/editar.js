@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Head from 'next/head'
-import Navbar from '../../components/Navbar'
-import Footer from '../../components/Footer'
 import { auth } from '../../lib/firebase'
 import { getPerfil, guardarPerfil, subirFotoPerfil } from '../../lib/storage'
 import { SITE_NAME } from '../../lib/constants'
@@ -118,11 +116,9 @@ export default function EditarPerfil() {
     return (
       <>
         <Head><title>Cargando...</title></Head>
-        <Navbar />
         <main style={{ position: 'relative', zIndex: 1, textAlign: 'center', paddingTop: 80, fontFamily: 'var(--font-body)' }}>
           <p style={{ color: 'var(--text-muted)' }}>Cargando...</p>
         </main>
-        <Footer />
       </>
     )
   }
@@ -131,12 +127,10 @@ export default function EditarPerfil() {
     return (
       <>
         <Head><title>Editar perfil · {SITE_NAME}</title></Head>
-        <Navbar />
         <main style={{ position: 'relative', zIndex: 1, textAlign: 'center', paddingTop: 80, fontFamily: 'var(--font-body)' }}>
           <p style={{ color: 'var(--text-secondary)', marginBottom: 16 }}>Debes iniciar sesión para editar tu perfil.</p>
           <Link href="/login" style={{ color: 'var(--primary)', fontWeight: 700, fontSize: '0.9rem' }}>Iniciar sesión</Link>
         </main>
-        <Footer />
       </>
     )
   }
@@ -144,7 +138,6 @@ export default function EditarPerfil() {
   return (
     <>
       <Head><title>Editar perfil · {SITE_NAME}</title></Head>
-      <Navbar />
       <main style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ maxWidth: 480, margin: '0 auto', padding: '48px 20px 80px', fontFamily: 'var(--font-body)' }}>
           <div style={{ textAlign: 'center', marginBottom: 28 }}>
@@ -256,7 +249,6 @@ export default function EditarPerfil() {
           </p>
         </div>
       </main>
-      <Footer />
     </>
   )
 }
