@@ -14,6 +14,7 @@ const categorias = [
   { id: 'estancos-licoreras', nombre: 'Estancos y licorerías', icono: 'fas fa-wine-bottle', gradiente: 'linear-gradient(135deg, #7C3AED, #6D28D9)' },
   { id: 'montallantas', nombre: 'Montallantas', icono: 'fas fa-circle-notch', gradiente: 'linear-gradient(135deg, #F97316, #334155)' },
   { id: 'ropa', nombre: 'Ropa', icono: 'fas fa-tshirt', gradiente: 'linear-gradient(135deg, #EC4899, #8B5CF6)' },
+  { id: 'turismo', nombre: 'Turismo y agencias', icono: 'fas fa-plane-departure', gradiente: 'linear-gradient(135deg, #0EA5E9, #6366F1)' },
 ]
 
 export default categorias
