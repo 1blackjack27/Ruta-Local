@@ -1,7 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app'
 import { getFirestore, collection, getDocs, doc, updateDoc } from 'firebase/firestore'
 import { getAdminDb, borrarImagenesAdmin } from '../../lib/firebase-admin'
-import { getEstadoSuscripcion, getTipoRecordatorioHoy } from '../../lib/suscripciones'
+import { getEstadoSuscripcion, getTipoRecordatorioHoy, getRecordatorioPrueba } from '../../lib/suscripciones'
 import { enviarCorreo, getEnlacePago, plantillaCorreo } from '../../lib/email'
 
 const firebaseConfig = {
@@ -27,40 +27,63 @@ export default async function handler(req, res) {
 
     for (const d of snapshot.docs) {
       const data = d.data()
-      if (data.plan !== 'premium' && data.plan !== 'plus') continue
-      if (!data.subscriptionStart) continue
+      const esPremium = data.plan === 'premium' || data.plan === 'plus'
+      const esFree = !data.plan || data.plan === 'free'
 
-      const estado = getEstadoSuscripcion(data, ahora)
-
-      // 1. Enviar recordatorio si toca hoy
-      const recordatorio = getTipoRecordatorioHoy(data, ahora)
-      if (recordatorio && data.ownerEmail) {
-        const enlace = getEnlacePago(d.id)
-        const html = plantillaCorreo({
-          titulo: recordatorio.asunto,
-          mensaje: `${recordatorio.mensaje} Tu plan ${data.plan === 'plus' ? 'Premium Plus' : 'Premium'} está activo.`,
-          enlace,
-          enlaceTexto: 'Pagar y renovar',
-        })
-        const r = await enviarCorreo({ to: data.ownerEmail, subject: recordatorio.asunto, html })
-        if (r.enviado) {
-          resultado.correosEnviados++
-          await updateDoc(doc(db, 'negocios', d.id), { lastReminderDate: hoy })
-        } else if (!r.enviado && r.motivo !== 'sin-llave') {
-          resultado.errores++
-        } else {
-          resultado.correosPendientes++
-          await updateDoc(doc(db, 'negocios', d.id), { lastReminderDate: hoy })
+      // Negocios Premium/Plus: recordatorios de renovación
+      if (esPremium && data.subscriptionStart) {
+        const estado = getEstadoSuscripcion(data, ahora)
+        const recordatorio = getTipoRecordatorioHoy(data, ahora)
+        if (recordatorio && data.ownerEmail) {
+          const enlace = getEnlacePago(d.id)
+          const html = plantillaCorreo({
+            titulo: recordatorio.asunto,
+            mensaje: `${recordatorio.mensaje} Tu plan ${data.plan === 'plus' ? 'Premium Plus' : 'Premium'} está activo.`,
+            enlace,
+            enlaceTexto: 'Pagar y renovar',
+          })
+          const r = await enviarCorreo({ to: data.ownerEmail, subject: recordatorio.asunto, html })
+          if (r.enviado) {
+            resultado.correosEnviados++
+            await updateDoc(doc(db, 'negocios', d.id), { lastReminderDate: hoy })
+          } else if (!r.enviado && r.motivo !== 'sin-llave') {
+            resultado.errores++
+          } else {
+            resultado.correosPendientes++
+            await updateDoc(doc(db, 'negocios', d.id), { lastReminderDate: hoy })
+          }
+        }
+        if (estado === 'por-eliminar') {
+          const adminDb = getAdminDb()
+          if (adminDb) {
+            await borrarImagenesAdmin(data.fotos || [])
+            await adminDb.collection('negocios').doc(d.id).delete()
+            resultado.negociosEliminados++
+          }
         }
       }
 
-      // 2. Eliminar si superó los días de gracia
-      if (estado === 'por-eliminar') {
-        const adminDb = getAdminDb()
-        if (adminDb) {
-          await borrarImagenesAdmin(data.fotos || [])
-          await adminDb.collection('negocios').doc(d.id).delete()
-          resultado.negociosEliminados++
+      // Negocios Gratuitos: recordatorios de prueba y gracia
+      if (esFree) {
+        const recordatorio = getRecordatorioPrueba(data, ahora)
+        if (recordatorio && data.ownerEmail) {
+          const enlace = getEnlacePago(d.id)
+          const html = plantillaCorreo({
+            titulo: recordatorio.asunto,
+            mensaje: recordatorio.mensaje,
+            enlace,
+            enlaceTexto: 'Actualizar mi plan',
+          })
+          const r = await enviarCorreo({ to: data.ownerEmail, subject: recordatorio.asunto, html })
+          if (r.enviado) {
+            resultado.correosEnviados++
+            await updateDoc(doc(db, 'negocios', d.id), { lastReminderDate: hoy })
+          } else if (!r.enviado && r.motivo !== 'sin-llave') {
+            resultado.errores++
+          } else {
+            resultado.correosPendientes++
+            await updateDoc(doc(db, 'negocios', d.id), { lastReminderDate: hoy })
+          }
         }
       }
     }
