@@ -2,7 +2,7 @@ const categorias = [
   { id: 'restaurantes', nombre: 'Restaurantes', icono: 'fas fa-utensils', gradiente: 'linear-gradient(135deg, #F59E0B, #EF4444)' },
   { id: 'hoteles', nombre: 'Hoteles', icono: 'fas fa-hotel', gradiente: 'linear-gradient(135deg, #6366F1, #8B5CF6)' },
   { id: 'glamping', nombre: 'Glamping', icono: 'fas fa-campground', gradiente: 'linear-gradient(135deg, #10B981, #059669)' },
-  { id: 'ganaderia', nombre: 'Ganadería', icono: 'fas fa-cow', gradiente: 'linear-gradient(135deg, #8B5CF6, #6D28D9)' },
+  { id: 'moteles', nombre: 'Moteles', icono: 'fas fa-bed', gradiente: 'linear-gradient(135deg, #7C3AED, #6D28D9)' },
   { id: 'artesanias', nombre: 'Artesanías', icono: 'fas fa-palette', gradiente: 'linear-gradient(135deg, #EC4899, #F43F5E)' },
   { id: 'farmacias', nombre: 'Farmacias', icono: 'fas fa-prescription-bottle', gradiente: 'linear-gradient(135deg, #14B8A6, #0EA5E9)' },
   { id: 'alimentos', nombre: 'Alimentos', icono: 'fas fa-apple-alt', gradiente: 'linear-gradient(135deg, #22C55E, #16A34A)' },
