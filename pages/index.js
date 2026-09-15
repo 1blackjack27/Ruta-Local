@@ -18,27 +18,6 @@ const countByCategoria = (negocios) => {
   return info
 }
 
-const testimonios = [
-  {
-    id: 1,
-    nombre: 'María López',
-    avatar: 'ML',
-    cargo: 'Dueña de Hotel Colonial, Villa de Leyva',
-    texto: 'Gracias a Ruta Local, mi hospedaje pasó de tener 2 reservas semanales a estar lleno cada fin de semana. La plataforma me conectó con viajeros que buscaban exactamente lo que ofrezco.',
-    estrellas: 5,
-    color: '#6366F1',
-  },
-  {
-    id: 2,
-    nombre: 'Carlos Mendoza',
-    avatar: 'CM',
-    cargo: 'Fundador de Artesanías Wayúu, Riohacha',
-    texto: 'Registré mi negocio de artesanías y en menos de una semana recibí pedidos de todo el país. La visibilidad que da estar en un directorio organizado por municipios es increíble.',
-    estrellas: 5,
-    color: '#F59E0B',
-  },
-]
-
 const s = {
   section: { padding: '80px 0' },
   container: { maxWidth: 1200, margin: '0 auto', padding: '0 20px' },
@@ -50,14 +29,6 @@ const s = {
     textAlign: 'center', color: 'var(--text-secondary)', fontSize: '1.05rem',
     maxWidth: 600, margin: '0 auto 48px', lineHeight: 1.6,
   },
-}
-
-function Star({ filled }) {
-  return (
-    <span style={{ color: filled ? '#F5A623' : '#E5E7EB', fontSize: '1.1rem', marginRight: 2 }}>
-      {filled ? '\u2605' : '\u2606'}
-    </span>
-  )
 }
 
 export default function Home() {
@@ -196,7 +167,7 @@ export default function Home() {
         <div style={{ ...s.container, display: 'flex', justifyContent: 'center', gap: 0 }} className="stats-row">
           {[
             { num: '+33', label: 'Departamentos', icon: 'fas fa-map-marked-alt' },
-            { num: '+1,000', label: 'Negocios', icon: 'fas fa-store' },
+            { num: '100%', label: 'Gratis para empezar', icon: 'fas fa-gift' },
             { num: '+14', label: 'Categor\u00EDas', icon: 'fas fa-th-large' },
           ].map((stat, i) => (
             <div key={i} style={{
@@ -304,7 +275,7 @@ export default function Home() {
         <div style={s.container}>
           <h2 style={s.sectionTitle}>Negocios destacados</h2>
           <p style={s.sectionSub}>
-            Descubre algunos de los negocios locales que ya confían en {SITE_NAME}.
+            Los negocios que aparecen aquí se registran gratis y aparecen por municipio y categoría.
           </p>
           {featured.length > 0 ? (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24 }} className="featured-grid">
@@ -404,46 +375,6 @@ export default function Home() {
               </Link>
             </div>
           )}
-        </div>
-      </section>
-
-      {/* TESTIMONIALS */}
-      <section style={{ ...s.section, background: 'transparent' }}>
-        <div style={s.container}>
-          <h2 style={s.sectionTitle}>Lo que dicen nuestros usuarios</h2>
-          <p style={s.sectionSub}>
-            Historias reales de emprendedores que ya forman parte de {SITE_NAME}.
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 28 }} className="test-grid">
-            {testimonios.map(t => (
-              <div key={t.id} style={{
-                background: '#fff', borderRadius: 'var(--radius)', padding: '32px 28px',
-                boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border)',
-                display: 'flex', flexDirection: 'column',
-              }}>
-                <div style={{ display: 'flex', gap: 2, marginBottom: 14 }}>
-                  {[1,2,3,4,5].map(i => <Star key={i} filled={i <= t.estrellas} />)}
-                </div>
-                <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: 1.7, fontStyle: 'italic', flex: 1, marginBottom: 18 }}>
-                  {'\u201C'}{t.texto}{'\u201D'}
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: '50%',
-                    background: `linear-gradient(135deg, ${t.color}, ${t.color}88)`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#fff', fontWeight: 700, fontSize: '0.9rem',
-                  }}>
-                    {t.avatar}
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text)' }}>{t.nombre}</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{t.cargo}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
