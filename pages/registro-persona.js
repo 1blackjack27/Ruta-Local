@@ -37,6 +37,7 @@ export default function RegistroPersona() {
   const [instagram, setInstagram] = useState('')
   const [tiktok, setTiktok] = useState('')
   const [facebook, setFacebook] = useState('')
+  const [sitioWeb, setSitioWeb] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -101,6 +102,7 @@ export default function RegistroPersona() {
         instagram: instagram.trim().replace(/^@/, ''),
         tiktok: tiktok.trim().replace(/^@/, ''),
         facebook: facebook.trim(),
+        sitioWeb: sitioWeb.trim(),
       })
       const next = router.query.next || '/'
       router.push(next)
@@ -255,6 +257,16 @@ export default function RegistroPersona() {
                 value={facebook}
                 onChange={e => setFacebook(e.target.value)}
                 placeholder="URL de tu Facebook (opcional)"
+                style={{ ...sField, paddingLeft: 40 }}
+              />
+            </div>
+            <div style={{ position: 'relative' }}>
+              <i className="fas fa-globe" style={{ position: 'absolute', left: 12, top: 13, color: 'var(--primary)' }}></i>
+              <input
+                type="text"
+                value={sitioWeb}
+                onChange={e => setSitioWeb(e.target.value)}
+                placeholder="Tu página web (opcional)"
                 style={{ ...sField, paddingLeft: 40 }}
               />
             </div>

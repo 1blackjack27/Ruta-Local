@@ -119,7 +119,7 @@ export default function PerfilPage() {
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '0 0 1rem' }}>
                   {resenas.length} {resenas.length === 1 ? 'comentario' : 'comentarios'} · {favoritos.length} {favoritos.length === 1 ? 'lugar favorito' : 'lugares favoritos'}
                 </p>
-                {(perfil.instagram || perfil.tiktok || perfil.facebook) && (
+                {(perfil.instagram || perfil.tiktok || perfil.facebook || perfil.sitioWeb) && (
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem' }}>
                     {perfil.instagram && (
                       <a href={`https://instagram.com/${perfil.instagram.replace(/^@/, '')}`} target="_blank" rel="noopener noreferrer"
@@ -143,6 +143,14 @@ export default function PerfilPage() {
                         onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
                         style={{ ...red, background: '#1877F2' }}>
                         <i className="fab fa-facebook-f"></i>
+                      </a>
+                    )}
+                    {perfil.sitioWeb && (
+                      <a href={perfil.sitioWeb.startsWith('http') ? perfil.sitioWeb : `https://${perfil.sitioWeb}`} target="_blank" rel="noopener noreferrer"
+                        aria-label="Sitio web" onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)' }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
+                        style={{ ...red, background: 'var(--primary)' }}>
+                        <i className="fas fa-globe"></i>
                       </a>
                     )}
                   </div>

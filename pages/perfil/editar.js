@@ -30,6 +30,7 @@ export default function EditarPerfil() {
   const [instagram, setInstagram] = useState('')
   const [tiktok, setTiktok] = useState('')
   const [facebook, setFacebook] = useState('')
+  const [sitioWeb, setSitioWeb] = useState('')
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState('')
   const [loading, setLoading] = useState(false)
@@ -49,6 +50,7 @@ export default function EditarPerfil() {
           setInstagram(p.instagram || '')
           setTiktok(p.tiktok || '')
           setFacebook(p.facebook || '')
+          setSitioWeb(p.sitioWeb || '')
         } else {
           setNombre(u.displayName || '')
         }
@@ -102,6 +104,7 @@ export default function EditarPerfil() {
       instagram: instagram.trim().replace(/^@/, ''),
       tiktok: tiktok.trim().replace(/^@/, ''),
       facebook: facebook.trim(),
+      sitioWeb: sitioWeb.trim(),
     })
     setLoading(false)
     if (ok) {
@@ -216,6 +219,11 @@ export default function EditarPerfil() {
                   <i className="fab fa-facebook-f" style={{ position: 'absolute', left: 12, top: 13, color: '#1877F2' }}></i>
                   <input type="text" value={facebook} onChange={e => setFacebook(e.target.value)}
                     placeholder="URL de tu Facebook (opcional)" style={{ ...sField, paddingLeft: 40 }} />
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <i className="fas fa-globe" style={{ position: 'absolute', left: 12, top: 13, color: 'var(--primary)' }}></i>
+                  <input type="text" value={sitioWeb} onChange={e => setSitioWeb(e.target.value)}
+                    placeholder="Tu página web (opcional)" style={{ ...sField, paddingLeft: 40 }} />
                 </div>
               </div>
             </div>
