@@ -850,7 +850,7 @@ export default function NegocioPage() {
           {/* Social Media Card */}
           {plan.mostrarRedes && (
             (() => {
-              const hasSocial = negocio.facebook || negocio.instagram || negocio.tiktok || negocio.website
+              const hasSocial = negocio.facebook || negocio.instagram || negocio.tiktok || negocio.sitioWeb
               if (!hasSocial) return null
               return (
                 <div style={{
@@ -904,8 +904,8 @@ export default function NegocioPage() {
                         TikTok
                       </a>
                     )}
-                    {negocio.website && (
-                      <a href={negocio.website} target="_blank" rel="noopener noreferrer"
+                    {negocio.sitioWeb && (
+                      <a href={negocio.sitioWeb} target="_blank" rel="noopener noreferrer"
                         style={{
                           display: 'flex', alignItems: 'center', gap: '0.5rem',
                           color: 'var(--primary)', textDecoration: 'none',
