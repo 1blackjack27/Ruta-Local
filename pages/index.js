@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { useState, useEffect } from 'react'
 import departamentos from '../data/departamentos'
 import categorias from '../data/categorias'
-import { getNegocios } from '../lib/storage'
+import { getNegocios, getTestimonios } from '../lib/storage'
 import { getPlanInfo } from '../lib/planes'
 import { SITE_NAME, PAIS, DIAS_PRUEBA } from '../lib/constants'
 
@@ -31,16 +31,29 @@ const s = {
   },
 }
 
+function Star({ filled }) {
+  return (
+    <span style={{ color: filled ? '#F5A623' : '#E5E7EB', fontSize: '1.1rem', marginRight: 2 }}>
+      {filled ? '\u2605' : '\u2606'}
+    </span>
+  )
+}
+
 export default function Home() {
   const router = useRouter()
   const [dept, setDept] = useState('')
   const [mun, setMun] = useState('')
   const [negocios, setNegocios] = useState([])
+  const [testimonios, setTestimonios] = useState([])
 
   useEffect(() => {
     async function cargar() {
-      const data = await getNegocios()
+      const [data, testimoniosData] = await Promise.all([
+        getNegocios(),
+        getTestimonios(4)
+      ])
       setNegocios(data)
+      setTestimonios(testimoniosData)
     }
     cargar()
   }, [])
@@ -377,6 +390,55 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* TESTIMONIOS REALES */}
+      {testimonios.length > 0 && (
+        <section style={{ ...s.section, background: 'transparent' }}>
+          <div style={s.container}>
+            <h2 style={s.sectionTitle}>Lo que dicen nuestros usuarios</h2>
+            <p style={s.sectionSub}>
+              Resenas reales de personas que ya usan {SITE_NAME}.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(testimonios.length, 3)}, 1fr)`, gap: 28 }} className="test-grid">
+              {testimonios.map(t => (
+                <div key={t.id} style={{
+                  background: '#fff', borderRadius: 'var(--radius)', padding: '32px 28px',
+                  boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border)',
+                  display: 'flex', flexDirection: 'column',
+                }}>
+                  <div style={{ display: 'flex', gap: 2, marginBottom: 14 }}>
+                    {[1,2,3,4,5].map(i => <Star key={i} filled={i <= t.rating} />)}
+                  </div>
+                  <p style={{ fontSize: '0.92rem', color: 'var(--text-secondary)', lineHeight: 1.7, fontStyle: 'italic', flex: 1, marginBottom: 18 }}>
+                    {'\u201C'}{t.comentario}{'\u201D'}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {t.fotoAutor ? (
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        backgroundImage: `url(${t.fotoAutor})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                      }} />
+                    ) : (
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#fff', fontWeight: 700, fontSize: '0.9rem',
+                      }}>
+                        {(t.nombre || 'U').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text)' }}>{t.nombre}</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>en {t.negocioNombre}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* CTA */}
       <section style={{ padding: '80px 0' }}>
